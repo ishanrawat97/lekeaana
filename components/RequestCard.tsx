@@ -6,72 +6,83 @@ interface Props {
   showAccept?: boolean
 }
 
-const FLAG: Record<string, string> = {
-  'United States': '🇺🇸',
-  'South Korea': '🇰🇷',
-  'Japan': '🇯🇵',
-  'France': '🇫🇷',
-  'Italy': '🇮🇹',
-  'United Kingdom': '🇬🇧',
-  'India': '🇮🇳',
+const COUNTRY_CODE: Record<string, string> = {
+  'United States': 'USA',
+  'South Korea':   'KOR',
+  'Japan':         'JPN',
+  'France':        'FRA',
+  'Italy':         'ITA',
+  'United Kingdom':'GBR',
+  'India':         'IND',
 }
 
 export default function RequestCard({ request, showAccept }: Props) {
-  const flag = FLAG[request.from_country] ?? '🌍'
+  const code = COUNTRY_CODE[request.from_country] ?? '---'
   const daysLeft = Math.ceil((new Date(request.deadline).getTime() - Date.now()) / 86400000)
   const totalINR = Math.round(request.price_usd * 84 + request.traveler_fee)
+  const urgent = daysLeft < 7
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-orange-200 hover:shadow-sm transition-all">
-      <div className="flex items-start justify-between gap-3">
+    <div className="pass" style={{ padding: 0 }}>
+      {/* Header */}
+      <div style={{ padding: '16px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div className="font-semibold text-gray-900">{request.item_name}</div>
+          <div className="micro" style={{ marginBottom: 4 }}>MANIFEST · {request.id?.slice(0,8).toUpperCase()}</div>
+          <div style={{ fontSize: 16, fontWeight: 500, lineHeight: 1.3 }}>{request.item_name}</div>
           {request.description && (
-            <div className="text-sm text-gray-500 mt-0.5 line-clamp-2">{request.description}</div>
+            <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {request.description}
+            </div>
           )}
         </div>
-        <span className="text-2xl flex-shrink-0">{flag}</span>
+        <div className="mono" style={{ fontSize: 28, fontWeight: 600, letterSpacing: '0.02em', color: 'var(--ink)', marginLeft: 16, flexShrink: 0 }}>
+          {code}
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-4">
-        <span className="text-xs bg-orange-50 text-orange-600 px-2.5 py-1 rounded-full font-medium">
-          From {request.from_country}
-        </span>
-        <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-          Qty: {request.quantity}
-        </span>
-        <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-          ${request.price_usd}
-        </span>
-        <span className={`text-xs px-2.5 py-1 rounded-full ${daysLeft < 7 ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-600'}`}>
-          {daysLeft > 0 ? `${daysLeft}d left` : 'Urgent'}
-        </span>
-      </div>
+      <hr className="perf" style={{ margin: '0 20px' }} />
 
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-50">
+      {/* Data row */}
+      <div style={{ padding: '12px 20px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
         <div>
-          <div className="text-xs text-gray-400">Traveler earns</div>
-          <div className="font-semibold text-orange-500">₹{request.traveler_fee}</div>
+          <div className="micro" style={{ marginBottom: 3 }}>origin</div>
+          <div className="mono" style={{ fontSize: 12, fontWeight: 500 }}>{request.from_country}</div>
         </div>
-        <div className="text-right">
-          <div className="text-xs text-gray-400">Total value</div>
-          <div className="text-sm font-medium text-gray-700">₹{totalINR.toLocaleString('en-IN')}</div>
+        <div>
+          <div className="micro" style={{ marginBottom: 3 }}>qty</div>
+          <div className="mono" style={{ fontSize: 12, fontWeight: 500 }}>{request.quantity}</div>
         </div>
+        <div>
+          <div className="micro" style={{ marginBottom: 3 }}>deadline</div>
+          <div className="mono" style={{ fontSize: 12, fontWeight: 500, color: urgent ? 'var(--accent)' : 'var(--ink)' }}>
+            {daysLeft > 0 ? `${daysLeft}d` : 'URGENT'}
+          </div>
+        </div>
+        <div>
+          <div className="micro" style={{ marginBottom: 3 }}>value</div>
+          <div className="mono" style={{ fontSize: 12, fontWeight: 500 }}>₹{totalINR.toLocaleString('en-IN')}</div>
+        </div>
+      </div>
+
+      <hr className="perf" style={{ margin: '0 20px' }} />
+
+      {/* Footer row */}
+      <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div className="micro" style={{ marginBottom: 3 }}>traveler earns</div>
+          <div className="mono" style={{ fontSize: 16, fontWeight: 600, color: 'var(--accent)' }}>₹{request.traveler_fee}</div>
+        </div>
+        {request.profiles && (
+          <div style={{ fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>
+            {request.profiles.full_name}
+          </div>
+        )}
         {showAccept && (
-          <Link
-            href={`/order/accept/${request.id}`}
-            className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
+          <Link href={`/order/accept/${request.id}`} className="btn btn-primary" style={{ height: 34, padding: '0 14px', fontSize: 13 }}>
             Accept
           </Link>
         )}
       </div>
-
-      {request.profiles && (
-        <div className="mt-3 text-xs text-gray-400">
-          Posted by {request.profiles.full_name}
-        </div>
-      )}
     </div>
   )
 }

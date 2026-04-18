@@ -26,44 +26,48 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="border-b border-gray-100 bg-white sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold text-orange-500 tracking-tight">
-          lekeaana
+    <nav style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '22px 56px',
+      borderBottom: '1px solid var(--rule)',
+      background: 'var(--paper)',
+      position: 'sticky', top: 0, zIndex: 20,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
+        <Link href="/" style={{ fontFamily: 'var(--sans)', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--ink)', textDecoration: 'none' }}>
+          lekeaana<span style={{ color: 'var(--accent)' }}>.</span>
         </Link>
-        <div className="flex items-center gap-4">
-          {user ? (
-            <>
-              <Link href="/browse" className="text-sm text-gray-600 hover:text-gray-900">
-                Browse Requests
-              </Link>
-              <Link href="/request/new" className="text-sm text-gray-600 hover:text-gray-900">
-                Post Request
-              </Link>
-              <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">
-                Dashboard
-              </Link>
-              <button
-                onClick={signOut}
-                className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                Sign out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/auth/login" className="text-sm text-gray-600 hover:text-gray-900">
-                Login
-              </Link>
-              <Link
-                href="/auth/signup"
-                className="text-sm bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Get started
-              </Link>
-            </>
+        <div style={{ display: 'flex', gap: 28, fontSize: 14, color: 'var(--ink-2)' }}>
+          <Link href="/#how-it-works" style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>How it works</Link>
+          <Link href="/browse" style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>Browse requests</Link>
+          {user && (
+            <Link href="/dashboard" style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>Dashboard</Link>
           )}
         </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <span className="mono" style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
+          ESTD. 2025 · BENGALURU
+        </span>
+        {user ? (
+          <>
+            <Link href="/request/new" className="btn btn-ghost" style={{ height: 34, padding: '0 12px', fontSize: 13 }}>
+              Post Request
+            </Link>
+            <button onClick={signOut} className="btn btn-primary" style={{ height: 34, padding: '0 12px', fontSize: 13 }}>
+              Sign out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/auth/login" className="btn btn-ghost" style={{ height: 34, padding: '0 12px', fontSize: 13 }}>
+              Sign in
+            </Link>
+            <Link href="/auth/signup" className="btn btn-primary" style={{ height: 34, padding: '0 12px', fontSize: 13 }}>
+              Post a request
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   )

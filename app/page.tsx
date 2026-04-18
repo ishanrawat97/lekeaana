@@ -1,169 +1,445 @@
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 
-const HOW_IT_WORKS_BUYER = [
-  { step: '1', title: 'Post your request', desc: 'Tell us what you want — a Pokémon ETB, K-beauty product, sneaker drop — and where from.' },
-  { step: '2', title: 'Pay into escrow', desc: 'Your payment is held safely. Released only after you confirm delivery.' },
-  { step: '3', title: 'Traveler delivers', desc: 'A traveler picks up your item and a bike rider drops it at your door.' },
+/* ── data ── */
+const ROUTE_BOARD = [
+  { flt: 'AI-102', route: 'LAX → BLR', etd: '24 APR 22:10', carrying: 'Pokémon ETB ×2', gate: 'B14', status: 'live' },
+  { flt: 'KE-647', route: 'ICN → BOM', etd: '24 APR 19:40', carrying: 'Laneige ×3, COSRX',  gate: 'C02', status: 'live' },
+  { flt: 'JL-761', route: 'NRT → BLR', etd: '25 APR 11:25', carrying: 'Uniqlo JJK tee, figures', gate: 'A19', status: 'hold' },
+  { flt: 'AF-226', route: 'CDG → DEL', etd: '25 APR 14:00', carrying: 'Chanel Coco 100ml',  gate: 'E44', status: 'live' },
+  { flt: 'BA-139', route: 'LHR → BLR', etd: '26 APR 21:15', carrying: 'Burberry scarf, tea', gate: 'TBD', status: 'hold' },
+  { flt: 'AI-174', route: 'SFO → MAA', etd: '26 APR 23:30', carrying: 'Jordan 4 Retro',     gate: 'G8',  status: 'boarded' },
 ]
 
-const HOW_IT_WORKS_TRAVELER = [
-  { step: '1', title: 'Browse requests', desc: 'See what people need from the country you\'re traveling from.' },
-  { step: '2', title: 'Accept and buy', desc: 'Buy the item with your own money. It\'s already paid for in escrow.' },
-  { step: '3', title: 'Drop and earn', desc: 'Hand it to a bike rider at the airport. Earn ₹500–1000 per item.' },
+const BUYER_STEPS = [
+  { n: '01', t: 'Post your manifest', d: 'A Pokémon ETB, K-beauty set, pair of Jordans — declare what you want and the country.' },
+  { n: '02', t: 'Pay into escrow',    d: 'Held by Razorpay. Released to the traveler only after you confirm delivery at your door.' },
+  { n: '03', t: 'Your item flies home', d: 'A verified traveler buys it with their own money. A bike rider delivers at arrival.' },
+]
+
+const TRAVELER_STEPS = [
+  { n: '01', t: 'Browse the board',   d: 'See what buyers need from your origin country. Filter by weight, price, deadline.' },
+  { n: '02', t: 'Accept & purchase',  d: 'Item is already paid for in escrow. Buy with your card, keep the receipt in-app.' },
+  { n: '03', t: 'Earn per item',      d: '₹500–1,500 per item carried. Hand off to our rider at the airport. Paid by UPI the same day.' },
 ]
 
 const EXAMPLES = [
-  { emoji: '🃏', label: 'Pokémon ETBs', from: 'USA', price: '₹4,500 vs ₹12,000 on resale' },
-  { emoji: '🧴', label: 'K-beauty (Laneige, COSRX)', from: 'Korea', price: '1/3rd of Indian price' },
-  { emoji: '👟', label: 'Limited sneaker drops', from: 'USA', price: 'At retail, not resale' },
-  { emoji: '🌶️', label: 'MDH Masala for NRIs', from: 'India', price: '1/10th of US Indian stores' },
-  { emoji: '🎌', label: 'Anime merch & Uniqlo', from: 'Japan', price: 'Simply unavailable in India' },
-  { emoji: '👜', label: 'French perfumes', from: 'France', price: 'EU price, no duty markup' },
+  { label: 'Pokémon Prismatic Evolutions ETB', from: 'USA', city: 'Los Angeles', savings: 'Save ₹7,500',         inr: '₹4,500',  tag: 'TCG' },
+  { label: 'Laneige Lip Sleeping Mask',         from: 'KOR', city: 'Seoul',       savings: '⅓ the price',        inr: '₹820',    tag: 'Beauty' },
+  { label: 'Air Jordan 4 Retro "Bred"',         from: 'USA', city: 'New York',    savings: 'At retail',           inr: '₹18,400', tag: 'Footwear' },
+  { label: 'MDH Deggi Mirch 500g × 3',          from: 'IND', city: 'Delhi',       savings: '⅒ of NRI stores',    inr: '₹840',    tag: 'Pantry' },
+  { label: 'Uniqlo × Jujutsu Kaisen tee',       from: 'JPN', city: 'Tokyo',       savings: 'Unavailable in IN',   inr: '₹1,990',  tag: 'Apparel' },
+  { label: 'Chanel Coco Mademoiselle 100ml',    from: 'FRA', city: 'Paris CDG',   savings: 'No CIF markup',       inr: '₹14,200', tag: 'Perfume' },
 ]
 
-export default function Home() {
+const TRUST_ITEMS = [
+  { n: '01', t: 'Escrow, always',   d: 'Every rupee sits with Razorpay. Released only on confirmed delivery. No exceptions.' },
+  { n: '02', t: 'Verified travelers', d: 'Aadhaar + passport + face-match on signup. Average carrier has carried 9.2 items.' },
+  { n: '03', t: 'Airport-to-door', d: 'Carrier never meets buyer. Items are handed to our bike partners at arrivals.' },
+]
+
+/* ─────────────────────────────────────────── */
+
+function Ticker() {
+  const rows = [
+    'NOW CARRYING · LAX→BLR · 47 items in escrow · ₹12,40,000 moved this week',
+    'SEL→BOM · 3 travelers boarding · 18 requests open',
+    'CDG→DEL · average match time 4h 12m',
+    'NRT→BLR · 9 items picked up today',
+  ]
+  const content = rows.join('  ·  ') + '  ·  '
   return (
-    <div className="min-h-screen">
-      <Navbar />
+    <div style={{ background: 'var(--ink)', color: 'var(--paper)', borderBottom: '1px solid var(--ink)', overflow: 'hidden', height: 34 }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', height: '100%',
+        whiteSpace: 'nowrap',
+        animation: 'ticker 60s linear infinite',
+        fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em',
+      }}>
+        <span style={{ padding: '0 24px', textTransform: 'uppercase' }}>{(content + ' ').repeat(3)}</span>
+      </div>
+    </div>
+  )
+}
 
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-orange-50 to-white py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-block bg-orange-100 text-orange-700 text-sm font-medium px-3 py-1 rounded-full mb-6">
-            🇮🇳 India's peer-to-peer import marketplace
+function BoardingPassHero() {
+  const bars = [2,3,1,4,2,1,3,2,4,1,2,3,1,2,4,3,1,2,3,1,4,2,1,3,2,4,1,3]
+  let cx = 0
+  return (
+    <div style={{ position: 'relative', transform: 'rotate(-1.5deg)', filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.22))' }}>
+      <div className="pass" style={{ display: 'grid', gridTemplateColumns: '1fr 160px', boxShadow: '0 0 0 1px var(--ink)' }}>
+        {/* Main stub */}
+        <div style={{ padding: '24px 28px 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
+            <div>
+              <div className="micro" style={{ marginBottom: 2 }}>LEKEAANA · BOARDING PASS</div>
+              <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>NO. LK-88412-2025</div>
+            </div>
+            <span className="stamp stamp-double" style={{ transform: 'rotate(6deg)' }}>IN ESCROW</span>
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6 leading-tight">
-            Get anything from anywhere.{' '}
-            <span className="text-orange-500">Without the crazy markup.</span>
-          </h1>
-          <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
-            Connect with travelers flying to India. They pick up what you need — Pokémon cards,
-            K-beauty, sneakers, masalas — and a bike rider delivers it to your door.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/auth/signup"
-              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-colors"
-            >
-              Post a request
-            </Link>
-            <Link
-              href="/browse"
-              className="bg-white border-2 border-gray-200 hover:border-orange-300 text-gray-700 font-semibold px-8 py-4 rounded-xl text-lg transition-colors"
-            >
-              I'm a traveler →
-            </Link>
-          </div>
-        </div>
-      </section>
 
-      {/* Examples */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">
-            What people are getting
-          </h2>
-          <p className="text-center text-gray-500 mb-12">Real products, real savings.</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {EXAMPLES.map((ex) => (
-              <div key={ex.label} className="border border-gray-100 rounded-2xl p-5 hover:border-orange-200 hover:shadow-sm transition-all">
-                <div className="text-3xl mb-3">{ex.emoji}</div>
-                <div className="font-semibold text-gray-900">{ex.label}</div>
-                <div className="text-sm text-orange-500 font-medium mt-1">From {ex.from}</div>
-                <div className="text-sm text-gray-400 mt-1">{ex.price}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div>
+              <div className="micro" style={{ marginBottom: 4 }}>from — los angeles</div>
+              <div className="mono" style={{ fontSize: 56, fontWeight: 500, letterSpacing: '0.02em', lineHeight: 1 }}>USA</div>
+            </div>
+            <svg width="42" height="12" viewBox="0 0 42 12" fill="none" style={{ marginTop: 18 }}>
+              <path d="M0 6 L34 6 M28 1 L34 6 L28 11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="square" fill="none"/>
+            </svg>
+            <div>
+              <div className="micro" style={{ marginBottom: 4 }}>to — bengaluru</div>
+              <div className="mono" style={{ fontSize: 56, fontWeight: 500, letterSpacing: '0.02em', lineHeight: 1 }}>IND</div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 28 }}>
+            <div className="micro" style={{ marginBottom: 6 }}>item manifest</div>
+            <div style={{ fontSize: 19, fontWeight: 500, lineHeight: 1.3 }}>Pokémon Prismatic Evolutions Elite Trainer Box</div>
+            <div style={{ fontSize: 14, color: 'var(--ink-3)', marginTop: 3 }}>Qty 2 · $99.98 at retail · Insured to ₹18,000</div>
+          </div>
+
+          <hr className="perf" style={{ margin: '22px 0' }} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            {[['carrier','A. Deshmukh'],['flight','AI-102'],['etd','24 APR'],['eta','25 APR']].map(([label, value]) => (
+              <div key={label}>
+                <div className="micro" style={{ marginBottom: 4 }}>{label}</div>
+                <div className="mono" style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}>{value}</div>
               </div>
             ))}
           </div>
         </div>
-      </section>
 
-      {/* How it works */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-16">How it works</h2>
-          <div className="grid md:grid-cols-2 gap-16">
-            {/* Buyer */}
-            <div>
-              <div className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-6">For Buyers</div>
-              <div className="space-y-8">
-                {HOW_IT_WORKS_BUYER.map((item) => (
-                  <div key={item.step} className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-orange-500 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
-                      {item.step}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">{item.title}</div>
-                      <div className="text-gray-500 text-sm mt-1">{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Traveler */}
-            <div>
-              <div className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-6">For Travelers</div>
-              <div className="space-y-8">
-                {HOW_IT_WORKS_TRAVELER.map((item) => (
-                  <div key={item.step} className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-orange-500 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
-                      {item.step}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">{item.title}</div>
-                      <div className="text-gray-500 text-sm mt-1">{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Tear-off stub */}
+        <div style={{
+          borderLeft: '1.5px dashed var(--ink)', padding: '24px 18px',
+          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          background: 'oklch(0.97 0.006 80)',
+        }}>
+          <div>
+            <div className="micro">gate</div>
+            <div className="mono" style={{ fontSize: 34, fontWeight: 500, lineHeight: 1, marginTop: 2 }}>B14</div>
+            <div className="micro" style={{ marginTop: 14 }}>seq</div>
+            <div className="mono" style={{ fontSize: 18, marginTop: 2 }}>027/128</div>
+          </div>
+          <div style={{ marginTop: 18 }}>
+            <svg viewBox="0 0 120 46" width="100%" height="46" preserveAspectRatio="none">
+              {bars.map((w, i) => {
+                const x = cx
+                cx += w + 1.2
+                return <rect key={i} x={x} y="0" width={w} height="46" fill="var(--ink)" />
+              })}
+            </svg>
+            <div className="mono" style={{ fontSize: 9, letterSpacing: '0.1em', textAlign: 'center', marginTop: 4 }}>LK88412IND24APR</div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Trust */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Built on trust</h2>
-          <p className="text-gray-500 mb-12">Your money is safe. Your item is tracked.</p>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-6 rounded-2xl bg-orange-50">
-              <div className="text-2xl mb-3">🔒</div>
-              <div className="font-semibold text-gray-900 mb-2">Escrow payments</div>
-              <div className="text-sm text-gray-500">Money released only after you confirm delivery. Powered by Razorpay.</div>
-            </div>
-            <div className="p-6 rounded-2xl bg-orange-50">
-              <div className="text-2xl mb-3">⭐</div>
-              <div className="font-semibold text-gray-900 mb-2">Verified travelers</div>
-              <div className="text-sm text-gray-500">Travelers are rated after every delivery. Bad actors get removed.</div>
-            </div>
-            <div className="p-6 rounded-2xl bg-orange-50">
-              <div className="text-2xl mb-3">🛵</div>
-              <div className="font-semibold text-gray-900 mb-2">Last mile delivery</div>
-              <div className="text-sm text-gray-500">Bike riders pick up from the airport. Delivered to your door.</div>
-            </div>
+      {/* Corner verification stamp */}
+      <div style={{ position: 'absolute', top: -18, right: 40, transform: 'rotate(8deg)' }}>
+        <div style={{
+          width: 82, height: 82, borderRadius: '50%',
+          border: '1.5px dashed var(--accent)', color: 'var(--accent)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'var(--paper)',
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em' }}>VERIFIED</div>
+            <div className="mono" style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.1 }}>TRAVELER</div>
+            <div className="mono" style={{ fontSize: 8, color: 'var(--accent-ink)' }}>KYC · 2025</div>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  )
+}
 
-      {/* CTA */}
-      <section className="py-20 px-4 bg-orange-500">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to lekeaana?</h2>
-          <p className="text-orange-100 mb-8">Post your first request in under 2 minutes.</p>
-          <Link
-            href="/auth/signup"
-            className="bg-white text-orange-500 font-semibold px-8 py-4 rounded-xl text-lg hover:bg-orange-50 transition-colors inline-block"
-          >
-            Get started for free
+function Hero() {
+  return (
+    <section style={{ padding: '80px 56px 100px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 540px', gap: 80, alignItems: 'center' }}>
+        <div>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 28 }}>
+            <span className="chip">IATA · P2P IMPORT</span>
+            <span className="chip live">● LIVE · 128 IN TRANSIT</span>
+          </div>
+          <h1 className="serif-d" style={{ fontSize: 88, lineHeight: 0.95, margin: 0, fontWeight: 400, letterSpacing: '-0.025em' }}>
+            The world&rsquo;s shelves,<br />
+            <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>carried home.</em>
+          </h1>
+          <p style={{ fontSize: 19, lineHeight: 1.5, color: 'var(--ink-2)', maxWidth: 520, marginTop: 32 }}>
+            Lekeaana matches Indian buyers with trusted travelers flying in from abroad.
+            Post what you want. Pay into escrow. A traveler picks it up — a rider drops it at your door.
+          </p>
+          <div style={{ display: 'flex', gap: 12, marginTop: 36 }}>
+            <Link href="/request/new" className="btn btn-primary" style={{ height: 52, padding: '0 22px', fontSize: 15 }}>
+              Post a request →
+            </Link>
+            <Link href="/browse" className="btn btn-ghost" style={{ height: 52, padding: '0 22px', fontSize: 15 }}>
+              I&rsquo;m flying to India
+            </Link>
+          </div>
+          <div style={{ display: 'flex', gap: 40, marginTop: 56, paddingTop: 24, borderTop: '1px solid var(--rule)' }}>
+            {[['escrow held','₹4.2 Cr'],['travelers','2,847'],['avg. match','4h 12m'],['completion','99.1%']].map(([label, value]) => (
+              <div key={label}>
+                <div className="micro" style={{ marginBottom: 4 }}>{label}</div>
+                <div className="mono" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <BoardingPassHero />
+      </div>
+    </section>
+  )
+}
+
+function RouteBoard() {
+  return (
+    <section style={{ padding: '72px 56px', background: 'var(--ink)', color: 'var(--paper)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32 }}>
+        <div>
+          <div className="micro" style={{ color: 'oklch(0.65 0.008 60)', marginBottom: 8 }}>live carrier board · last sync 09:42</div>
+          <h2 className="serif-d" style={{ fontSize: 48, margin: 0, fontWeight: 400 }}>
+            Six travelers. Twenty-one items.{' '}
+            <em style={{ color: 'oklch(0.82 0.12 var(--accent-h))' }}>Boarding today.</em>
+          </h2>
+        </div>
+        <Link href="/browse" className="btn btn-ghost" style={{ borderColor: 'var(--paper)', color: 'var(--paper)' }}>
+          Browse all →
+        </Link>
+      </div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 13, border: '1px solid oklch(0.35 0.008 60)' }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: '100px 180px 200px 1fr 80px 120px',
+          padding: '10px 20px', borderBottom: '1px solid oklch(0.35 0.008 60)',
+          color: 'oklch(0.65 0.008 60)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 10,
+        }}>
+          <div>Flight</div><div>Route</div><div>Departs</div><div>Carrying</div><div>Gate</div>
+          <div style={{ textAlign: 'right' }}>Status</div>
+        </div>
+        {ROUTE_BOARD.map((r, i) => (
+          <div key={r.flt} style={{
+            display: 'grid', gridTemplateColumns: '100px 180px 200px 1fr 80px 120px',
+            padding: '16px 20px', alignItems: 'center',
+            borderBottom: i < ROUTE_BOARD.length - 1 ? '1px solid oklch(0.28 0.008 60)' : 'none',
+            fontSize: 14,
+          }}>
+            <div style={{ fontWeight: 500 }}>{r.flt}</div>
+            <div style={{ letterSpacing: '0.08em' }}>{r.route}</div>
+            <div style={{ color: 'oklch(0.75 0.008 60)' }}>{r.etd}</div>
+            <div style={{ fontFamily: 'var(--sans)', color: 'oklch(0.88 0.008 60)' }}>{r.carrying}</div>
+            <div>{r.gate}</div>
+            <div style={{ textAlign: 'right' }}>
+              {r.status === 'live'    && <span style={{ color: 'oklch(0.75 0.13 150)' }}>● ON TIME</span>}
+              {r.status === 'hold'    && <span style={{ color: 'oklch(0.75 0.14 75)' }}>◐ HOLD</span>}
+              {r.status === 'boarded' && <span style={{ color: 'oklch(0.7 0.008 60)' }}>✓ BOARDED</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function HowItWorks() {
+  return (
+    <section style={{ padding: '100px 56px', background: 'var(--paper)' }}>
+      <div style={{ textAlign: 'center', marginBottom: 64 }}>
+        <div className="micro" style={{ marginBottom: 10 }}>§ 02 · the mechanics</div>
+        <h2 className="serif-d" style={{ fontSize: 60, margin: 0, fontWeight: 400, letterSpacing: '-0.02em' }}>
+          One flight. Two journeys.
+        </h2>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 40, alignItems: 'stretch', maxWidth: 1280, margin: '0 auto' }}>
+        <HowColumn title="If you want something" subtitle="BUYER" items={BUYER_STEPS} />
+        <div className="perf-v" />
+        <HowColumn title="If you&rsquo;re flying in" subtitle="TRAVELER" items={TRAVELER_STEPS} />
+      </div>
+    </section>
+  )
+}
+
+function HowColumn({ title, subtitle, items }: { title: string; subtitle: string; items: typeof BUYER_STEPS }) {
+  return (
+    <div>
+      <span className="chip accent" style={{ marginBottom: 16, display: 'inline-flex' }}>{subtitle}</span>
+      <h3 className="serif-d" style={{ fontSize: 34, margin: '0 0 32px', fontWeight: 400, fontStyle: 'italic' }} dangerouslySetInnerHTML={{ __html: title }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {items.map(it => (
+          <div key={it.n} style={{ display: 'grid', gridTemplateColumns: '56px 1fr', gap: 20, padding: '20px 0', borderTop: '1px solid var(--rule)' }}>
+            <div className="mono" style={{ fontSize: 13, color: 'var(--accent)', letterSpacing: '0.08em', paddingTop: 3 }}>{it.n}</div>
+            <div>
+              <div style={{ fontSize: 19, fontWeight: 500, marginBottom: 6 }}>{it.t}</div>
+              <div style={{ fontSize: 14.5, color: 'var(--ink-2)', lineHeight: 1.5 }}>{it.d}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ManifestGrid() {
+  return (
+    <section style={{ padding: '100px 56px', background: 'oklch(0.97 0.006 85)', borderTop: '1px solid var(--rule)', borderBottom: '1px solid var(--rule)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 48 }}>
+        <div>
+          <div className="micro" style={{ marginBottom: 10 }}>§ 03 · recent manifests</div>
+          <h2 className="serif-d" style={{ fontSize: 56, margin: 0, fontWeight: 400 }}>What&rsquo;s coming off the plane.</h2>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {['ALL','TCG','BEAUTY','FOOTWEAR','PANTRY','APPAREL'].map(tag => (
+            <span key={tag} className="chip" style={{ cursor: 'pointer' }}>{tag}</span>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', border: '1px solid var(--ink)' }}>
+        {EXAMPLES.map((ex, i) => {
+          const col = i % 3, row = Math.floor(i / 3)
+          return (
+            <div key={ex.label} style={{
+              padding: 24, background: 'var(--paper)',
+              borderRight: col < 2 ? '1px solid var(--rule)' : 'none',
+              borderBottom: row < 1 ? '1px solid var(--rule)' : 'none',
+              display: 'flex', flexDirection: 'column', gap: 18, minHeight: 340,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span className="chip">{ex.tag}</span>
+                <span className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>{ex.from}</span>
+              </div>
+              <div className="placeholder" style={{ height: 140 }}>
+                <span className="mono" style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)', position: 'relative' }}>
+                  product · {ex.tag.toLowerCase()}
+                </span>
+              </div>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.25 }}>{ex.label}</div>
+                <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 6 }}>ORIGIN · {ex.city.toUpperCase()}</div>
+              </div>
+              <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px dashed var(--rule-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div className="micro">landed price</div>
+                  <div className="mono" style={{ fontSize: 18, fontWeight: 500 }}>{ex.inr}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="micro">vs resale</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--accent)' }}>{ex.savings}</div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function TrustSection() {
+  return (
+    <section style={{ padding: '100px 56px', background: 'var(--paper)' }}>
+      <div style={{ maxWidth: 800, marginBottom: 64 }}>
+        <div className="micro" style={{ marginBottom: 10 }}>§ 04 · trust declaration</div>
+        <h2 className="serif-d" style={{ fontSize: 60, margin: 0, fontWeight: 400, letterSpacing: '-0.02em' }}>
+          The money doesn&rsquo;t move<br />
+          <em style={{ color: 'var(--accent)' }}>until your item does.</em>
+        </h2>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {TRUST_ITEMS.map((it, i) => (
+          <div key={it.n} style={{
+            padding: '32px 32px 32px 0',
+            borderTop: '1px solid var(--ink)',
+            paddingLeft: i > 0 ? 32 : 0,
+            borderLeft: i > 0 ? '1px solid var(--rule)' : 'none',
+          }}>
+            <div className="mono" style={{ fontSize: 13, color: 'var(--accent)', marginBottom: 22, letterSpacing: '0.1em' }}>§ {it.n}</div>
+            <div style={{ fontSize: 26, fontWeight: 400, marginBottom: 12, letterSpacing: '-0.01em' }}>{it.t}</div>
+            <div style={{ fontSize: 15, color: 'var(--ink-2)', lineHeight: 1.55 }}>{it.d}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function CTA() {
+  return (
+    <section style={{ padding: '120px 56px', background: 'var(--ink)', color: 'var(--paper)', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+        <div className="micro" style={{ color: 'oklch(0.65 0.008 60)', marginBottom: 16 }}>final call · departure gate</div>
+        <h2 className="serif-d" style={{ fontSize: 88, lineHeight: 1, margin: 0, fontWeight: 400 }}>
+          Tell us what you want.{' '}
+          <em style={{ color: 'oklch(0.82 0.12 var(--accent-h))' }}>We&rsquo;ll fly it in.</em>
+        </h2>
+        <p style={{ fontSize: 19, color: 'oklch(0.78 0.008 60)', maxWidth: 520, margin: '32px auto 44px', lineHeight: 1.5 }}>
+          Post your first request in under two minutes. Pay nothing until a traveler is matched.
+        </p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <Link href="/request/new" className="btn" style={{ height: 52, padding: '0 22px', fontSize: 15, background: 'var(--paper)', color: 'var(--ink)' }}>
+            Post a request →
+          </Link>
+          <Link href="/browse" className="btn btn-ghost" style={{ height: 52, padding: '0 22px', fontSize: 15, borderColor: 'var(--paper)', color: 'var(--paper)' }}>
+            See open routes
           </Link>
         </div>
-      </section>
+      </div>
+    </section>
+  )
+}
 
-      {/* Footer */}
-      <footer className="py-8 px-4 border-t border-gray-100 text-center text-sm text-gray-400">
-        © 2025 Lekeaana. Made with ❤️ in India.
-      </footer>
+function Footer() {
+  const cols = [
+    { t: 'PRODUCT',  l: ['Post a request', 'Browse routes', 'For travelers', 'Pricing'] },
+    { t: 'COMPANY',  l: ['About', 'Press', 'Careers', 'Partners'] },
+    { t: 'TRUST',    l: ['Escrow', 'Safety', 'Customs', 'Disputes'] },
+    { t: 'LEGAL',    l: ['Terms', 'Privacy', 'Refunds', 'Prohibited'] },
+  ]
+  return (
+    <footer style={{ padding: '48px 56px 32px', background: 'var(--paper)', borderTop: '1px solid var(--ink)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: 40, marginBottom: 40 }}>
+        <div>
+          <span style={{ fontFamily: 'var(--sans)', fontSize: 22, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--ink)' }}>
+            lekeaana<span style={{ color: 'var(--accent)' }}>.</span>
+          </span>
+          <div style={{ marginTop: 14, fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.55, maxWidth: 320 }}>
+            Peer-to-peer import for India. Regd. under Lekeaana Technologies Pvt. Ltd., Bengaluru.
+          </div>
+        </div>
+        {cols.map(col => (
+          <div key={col.t}>
+            <div className="micro" style={{ marginBottom: 14 }}>{col.t}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13.5 }}>
+              {col.l.map(x => <span key={x} style={{ cursor: 'pointer', color: 'var(--ink-2)' }}>{x}</span>)}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', paddingTop: 24,
+        borderTop: '1px solid var(--rule)',
+        fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)',
+      }}>
+        <span>© 2025 LEKEAANA TECHNOLOGIES</span>
+        <span>BENGALURU · MUMBAI · DELHI</span>
+        <span>RAZORPAY SECURED · SOC 2</span>
+      </div>
+    </footer>
+  )
+}
+
+export default function Home() {
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      <Navbar />
+      <Ticker />
+      <Hero />
+      <RouteBoard />
+      <HowItWorks />
+      <ManifestGrid />
+      <TrustSection />
+      <CTA />
+      <Footer />
     </div>
   )
 }

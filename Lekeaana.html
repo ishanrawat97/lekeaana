@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Lekeaana — Boarding Pass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="styles/tokens.css">
+<style>
+  /* ---- page + canvas frame ---- */
+  body { background: oklch(0.93 0.008 80); }
+
+  .canvas {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 48px 0 120px;
+    gap: 72px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px;
+  }
+  .section-label::before, .section-label::after {
+    content: ''; flex: 1 0 48px; height: 1px; background: var(--rule);
+  }
+
+  .stage {
+    width: 1440px;
+    background: var(--paper);
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.15), 0 0 0 1px oklch(0.88 0.005 80);
+  }
+
+  .phones-stage {
+    width: 1440px;
+    display: flex; gap: 28px;
+    padding: 56px 32px;
+    justify-content: center;
+    background: oklch(0.9 0.008 80);
+    flex-wrap: wrap;
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.15), 0 0 0 1px oklch(0.84 0.005 80);
+  }
+
+  /* ---- Tweaks panel ---- */
+  .tweaks {
+    position: fixed; right: 20px; bottom: 20px; z-index: 1000;
+    background: var(--paper); border: 1px solid var(--ink);
+    padding: 16px 18px; width: 280px;
+    font-family: var(--sans); font-size: 13px;
+    box-shadow: 0 20px 40px -12px rgba(0,0,0,0.2);
+    display: none;
+  }
+  .tweaks.open { display: block; }
+  .tweaks h3 {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin: 0 0 12px; color: var(--ink-3); font-weight: 500;
+  }
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .sw {
+    aspect-ratio: 1; border: 1px solid var(--rule); cursor: pointer;
+    position: relative; border-radius: 2px;
+  }
+  .sw.active { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .sw-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-3); margin-top: 6px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+  <!-- Desktop landing -->
+  <div>
+    <div class="section-label"><span>desktop — marketing site</span></div>
+    <div class="stage" id="landing-mount"></div>
+  </div>
+
+  <!-- Mobile: buyer -->
+  <div>
+    <div class="section-label"><span>mobile — buyer flow</span></div>
+    <div class="phones-stage" id="buyer-mount"></div>
+  </div>
+
+  <!-- Mobile: traveler -->
+  <div>
+    <div class="section-label"><span>mobile — traveler flow</span></div>
+    <div class="phones-stage" id="traveler-mount"></div>
+  </div>
+
+  <!-- Order tracking (the hero screen) -->
+  <div>
+    <div class="section-label"><span>mobile — order tracking (the boarding pass)</span></div>
+    <div class="phones-stage" id="order-mount"></div>
+  </div>
+</div>
+
+<!-- Tweaks panel -->
+<div class="tweaks" id="tweaks">
+  <h3>Accent palette</h3>
+  <div class="swatches" id="swatches"></div>
+  <div class="sw-label" id="sw-label" style="margin-top: 10px;">Customs red · default</div>
+</div>
+
+<!-- Tweaks defaults -->
+<script>
+  const TWEAKS = /*EDITMODE-BEGIN*/{
+    "accent": "customs"
+  }/*EDITMODE-END*/;
+
+  const PALETTES = {
+    customs:  { h: 25,  l: 0.58, c: 0.18, ink_l: 0.42, ink_c: 0.16, name: 'Customs red' },
+    stamp:    { h: 260, l: 0.5,  c: 0.18, ink_l: 0.35, ink_c: 0.16, name: 'Stamp violet' },
+    tarmac:   { h: 230, l: 0.48, c: 0.16, ink_l: 0.3,  ink_c: 0.14, name: 'Tarmac navy' },
+    forest:   { h: 150, l: 0.48, c: 0.12, ink_l: 0.3,  ink_c: 0.1,  name: 'Jet-green' },
+    copper:   { h: 55,  l: 0.6,  c: 0.15, ink_l: 0.4,  ink_c: 0.12, name: 'Copper' },
+    ink:      { h: 250, l: 0.25, c: 0.06, ink_l: 0.2,  ink_c: 0.05, name: 'Pure ink' },
+    cochineal:{ h: 0,   l: 0.5,  c: 0.2,  ink_l: 0.35, ink_c: 0.18, name: 'Cochineal' },
+    saffron:  { h: 70,  l: 0.68, c: 0.15, ink_l: 0.45, ink_c: 0.14, name: 'Saffron' },
+  };
+
+  function applyAccent(key) {
+    const p = PALETTES[key] || PALETTES.customs;
+    const r = document.documentElement;
+    r.style.setProperty('--accent-h', p.h);
+    r.style.setProperty('--accent', `oklch(${p.l} ${p.c} ${p.h})`);
+    r.style.setProperty('--accent-ink', `oklch(${p.ink_l} ${p.ink_c} ${p.h})`);
+    r.style.setProperty('--accent-wash', `oklch(0.96 ${Math.min(p.c * 0.2, 0.04)} ${p.h})`);
+    const label = document.getElementById('sw-label');
+    if (label) label.textContent = p.name;
+    document.querySelectorAll('#swatches .sw').forEach(s => {
+      s.classList.toggle('active', s.dataset.key === key);
+    });
+  }
+
+  function buildSwatches() {
+    const el = document.getElementById('swatches');
+    if (!el) return;
+    el.innerHTML = '';
+    Object.entries(PALETTES).forEach(([key, p]) => {
+      const div = document.createElement('div');
+      div.className = 'sw';
+      div.dataset.key = key;
+      div.style.background = `oklch(${p.l} ${p.c} ${p.h})`;
+      div.title = p.name;
+      div.onclick = () => {
+        TWEAKS.accent = key;
+        applyAccent(key);
+        window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { accent: key } }, '*');
+      };
+      el.appendChild(div);
+    });
+  }
+
+  // Apply initial
+  window.addEventListener('DOMContentLoaded', () => {
+    buildSwatches();
+    applyAccent(TWEAKS.accent);
+  });
+
+  // Edit mode protocol
+  window.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if (d.type === '__activate_edit_mode') {
+      document.getElementById('tweaks').classList.add('open');
+    } else if (d.type === '__deactivate_edit_mode') {
+      document.getElementById('tweaks').classList.remove('open');
+    }
+  });
+  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+</script>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="src/primitives.jsx"></script>
+<script type="text/babel" src="src/landing.jsx"></script>
+<script type="text/babel" src="src/mobile-buyer.jsx"></script>
+<script type="text/babel" src="src/mobile-traveler.jsx"></script>
+<script type="text/babel" src="src/mobile-order.jsx"></script>
+<script type="text/babel" src="src/mount.jsx"></script>
+
+</body>
+</html>
