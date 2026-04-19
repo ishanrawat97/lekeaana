@@ -49,20 +49,20 @@ export default function DashboardPage() {
       <Navbar />
 
       {/* Header */}
-      <div style={{ padding: '32px 40px 24px', borderBottom: '1px solid var(--rule)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div className="px-page" style={{ paddingTop: 28, paddingBottom: 20, borderBottom: '1px solid var(--rule)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <div className="micro" style={{ marginBottom: 8 }}>good to see you</div>
-            <h1 className="serif-d" style={{ fontSize: 44, margin: 0, lineHeight: 1.05, letterSpacing: '-0.01em' }}>
+            <h1 className="serif-d" style={{ fontSize: 36, margin: 0, lineHeight: 1.1, letterSpacing: '-0.01em' }}>
               <em style={{ color: 'var(--accent)' }}>{myRequests.filter(r => r.status === 'in_transit' || r.status === 'matched').length || 'Your'} item{myRequests.filter(r => r.status === 'in_transit').length !== 1 ? 's' : ''}</em>
               {myRequests.some(r => r.status === 'in_transit') ? ' are moving through your airspace.' : ' are ready for departure.'}
             </h1>
           </div>
-          <Link href="/request/new" className="btn btn-primary" style={{ height: 44, padding: '0 18px', fontSize: 14 }}>
+          <Link href="/request/new" className="btn btn-primary" style={{ height: 44, padding: '0 18px', fontSize: 14, flexShrink: 0 }}>
             + Post a new request
           </Link>
         </div>
-        <div style={{ display: 'flex', gap: 48, marginTop: 28, paddingTop: 20, borderTop: '1px solid var(--rule)' }}>
+        <div style={{ display: 'flex', gap: 28, marginTop: 24, paddingTop: 18, borderTop: '1px solid var(--rule)', flexWrap: 'wrap' }}>
           {[
             ['requests open', myRequests.filter(r => r.status === 'open').length.toString()],
             ['items en route', myRequests.filter(r => r.status === 'in_transit').length.toString()],
@@ -71,27 +71,28 @@ export default function DashboardPage() {
           ].map(([label, value]) => (
             <div key={label}>
               <div className="micro" style={{ marginBottom: 4 }}>{label}</div>
-              <div className="mono" style={{ fontSize: 22, fontWeight: 500, color: 'var(--ink)' }}>{value}</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 500, color: 'var(--ink)' }}>{value}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ padding: '0 40px', borderBottom: '1px solid var(--rule)' }}>
+      <div className="px-page" style={{ borderBottom: '1px solid var(--rule)' }}>
         <div style={{ display: 'flex', gap: 24 }}>
           {tabs.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} style={{
               padding: '14px 0', fontSize: 13, fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer',
               borderBottom: tab === t.key ? '1.5px solid var(--accent)' : '1.5px solid transparent',
               color: tab === t.key ? 'var(--ink)' : 'var(--ink-3)',
+              whiteSpace: 'nowrap',
             }}>{t.label}</button>
           ))}
         </div>
       </div>
 
       {/* Table */}
-      <div style={{ padding: '24px 40px 48px' }}>
+      <div className="px-page" style={{ paddingTop: 24, paddingBottom: 48 }}>
         {loading ? (
           <div style={{ border: '1px solid var(--ink)', padding: 32, textAlign: 'center' }}>
             <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)', letterSpacing: '0.14em' }}>LOADING MANIFEST…</div>
@@ -103,43 +104,45 @@ export default function DashboardPage() {
               <Link href="/request/new" className="btn btn-primary">Post your first request →</Link>
             </div>
           ) : (
-            <div style={{ border: '1px solid var(--ink)', background: 'var(--paper)' }}>
-              <div style={{
-                display: 'grid', gridTemplateColumns: '110px 1fr 160px 160px 120px 120px 100px',
-                padding: '12px 20px', borderBottom: '1px solid var(--ink)',
-                background: 'oklch(0.97 0.006 85)',
-                fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)',
-              }}>
-                <div>LK-ID</div><div>Item</div><div>Route</div><div>Carrier</div>
-                <div>Deadline</div><div>Fee</div><div style={{ textAlign: 'right' }}>Status</div>
-              </div>
-              {myRequests.map((req, i) => {
-                const order = req.orders?.[0]
-                const travelerName = (order as unknown as { profiles?: { full_name: string } })?.profiles?.full_name ?? 'Awaiting match'
-                return (
-                  <div key={req.id} style={{
-                    display: 'grid', gridTemplateColumns: '110px 1fr 160px 160px 120px 120px 100px',
-                    padding: '16px 20px', alignItems: 'center', fontSize: 13,
-                    borderBottom: i < myRequests.length - 1 ? '1px solid var(--rule)' : 'none',
-                  }}>
-                    <div className="mono" style={{ fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>{req.id.slice(0,8).toUpperCase()}</div>
-                    <div style={{ fontWeight: 500 }}>{req.item_name}</div>
-                    <div className="mono" style={{ fontSize: 12, letterSpacing: '0.06em' }}>{req.from_country} → IND</div>
-                    <div style={{ color: travelerName === 'Awaiting match' ? 'var(--ink-3)' : 'var(--ink)', fontStyle: travelerName === 'Awaiting match' ? 'italic' : 'normal' }}>{travelerName}</div>
-                    <div className="mono" style={{ fontSize: 12 }}>{new Date(req.deadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }).toUpperCase()}</div>
-                    <div className="mono" style={{ fontSize: 12 }}>₹{req.traveler_fee}</div>
-                    <div style={{ textAlign: 'right' }}>
-                      <Link href={order ? `/order/${order.id}` : `/request/${req.id}`} style={{
-                        fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em',
-                        color: STATUS_COLOR[req.status] || 'var(--ink-3)',
-                        textDecoration: 'none',
-                      }}>
-                        {STATUS_LABEL[req.status] || req.status.toUpperCase()}
-                      </Link>
+            <div className="table-scroll">
+              <div style={{ border: '1px solid var(--ink)', background: 'var(--paper)', minWidth: 700 }}>
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '110px 1fr 140px 140px 110px 110px 100px',
+                  padding: '12px 16px', borderBottom: '1px solid var(--ink)',
+                  background: 'oklch(0.97 0.006 85)',
+                  fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)',
+                }}>
+                  <div>LK-ID</div><div>Item</div><div>Route</div><div>Carrier</div>
+                  <div>Deadline</div><div>Fee</div><div style={{ textAlign: 'right' }}>Status</div>
+                </div>
+                {myRequests.map((req, i) => {
+                  const order = req.orders?.[0]
+                  const travelerName = (order as unknown as { profiles?: { full_name: string } })?.profiles?.full_name ?? 'Awaiting match'
+                  return (
+                    <div key={req.id} style={{
+                      display: 'grid', gridTemplateColumns: '110px 1fr 140px 140px 110px 110px 100px',
+                      padding: '14px 16px', alignItems: 'center', fontSize: 13,
+                      borderBottom: i < myRequests.length - 1 ? '1px solid var(--rule)' : 'none',
+                    }}>
+                      <div className="mono" style={{ fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>{req.id.slice(0,8).toUpperCase()}</div>
+                      <div style={{ fontWeight: 500 }}>{req.item_name}</div>
+                      <div className="mono" style={{ fontSize: 11, letterSpacing: '0.06em' }}>{req.from_country} → IND</div>
+                      <div style={{ color: travelerName === 'Awaiting match' ? 'var(--ink-3)' : 'var(--ink)', fontStyle: travelerName === 'Awaiting match' ? 'italic' : 'normal', fontSize: 12 }}>{travelerName}</div>
+                      <div className="mono" style={{ fontSize: 11 }}>{new Date(req.deadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }).toUpperCase()}</div>
+                      <div className="mono" style={{ fontSize: 11 }}>₹{req.traveler_fee}</div>
+                      <div style={{ textAlign: 'right' }}>
+                        <Link href={order ? `/order/${order.id}` : `/request/${req.id}`} style={{
+                          fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em',
+                          color: STATUS_COLOR[req.status] || 'var(--ink-3)',
+                          textDecoration: 'none',
+                        }}>
+                          {STATUS_LABEL[req.status] || req.status.toUpperCase()}
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           )
         ) : tab === 'carrying' ? (
@@ -149,39 +152,41 @@ export default function DashboardPage() {
               <Link href="/browse" className="btn btn-primary">Browse open requests →</Link>
             </div>
           ) : (
-            <div style={{ border: '1px solid var(--ink)', background: 'var(--paper)' }}>
-              <div style={{
-                display: 'grid', gridTemplateColumns: '110px 1fr 180px 120px 120px 100px',
-                padding: '12px 20px', borderBottom: '1px solid var(--ink)',
-                background: 'oklch(0.97 0.006 85)',
-                fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)',
-              }}>
-                <div>LK-ID</div><div>Item</div><div>Buyer</div><div>Earning</div><div>Deadline</div><div style={{ textAlign: 'right' }}>Status</div>
-              </div>
-              {myOrders.map((order, i) => (
-                <div key={order.id} style={{
-                  display: 'grid', gridTemplateColumns: '110px 1fr 180px 120px 120px 100px',
-                  padding: '16px 20px', alignItems: 'center', fontSize: 13,
-                  borderBottom: i < myOrders.length - 1 ? '1px solid var(--rule)' : 'none',
+            <div className="table-scroll">
+              <div style={{ border: '1px solid var(--ink)', background: 'var(--paper)', minWidth: 620 }}>
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '110px 1fr 160px 110px 110px 100px',
+                  padding: '12px 16px', borderBottom: '1px solid var(--ink)',
+                  background: 'oklch(0.97 0.006 85)',
+                  fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-3)',
                 }}>
-                  <div className="mono" style={{ fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>{order.id.slice(0,8).toUpperCase()}</div>
-                  <div style={{ fontWeight: 500 }}>{order.requests?.item_name}</div>
-                  <div style={{ color: 'var(--ink-2)' }}>{order.requests?.from_country} → IND</div>
-                  <div className="mono" style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>₹{order.requests?.traveler_fee}</div>
-                  <div className="mono" style={{ fontSize: 12 }}>
-                    {order.requests?.deadline ? new Date(order.requests.deadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }).toUpperCase() : '—'}
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <Link href={`/order/${order.id}`} style={{
-                      fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em',
-                      color: STATUS_COLOR[order.status] || 'var(--ink-3)',
-                      textDecoration: 'none',
-                    }}>
-                      {STATUS_LABEL[order.status] || order.status.toUpperCase()}
-                    </Link>
-                  </div>
+                  <div>LK-ID</div><div>Item</div><div>Buyer</div><div>Earning</div><div>Deadline</div><div style={{ textAlign: 'right' }}>Status</div>
                 </div>
-              ))}
+                {myOrders.map((order, i) => (
+                  <div key={order.id} style={{
+                    display: 'grid', gridTemplateColumns: '110px 1fr 160px 110px 110px 100px',
+                    padding: '14px 16px', alignItems: 'center', fontSize: 13,
+                    borderBottom: i < myOrders.length - 1 ? '1px solid var(--rule)' : 'none',
+                  }}>
+                    <div className="mono" style={{ fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>{order.id.slice(0,8).toUpperCase()}</div>
+                    <div style={{ fontWeight: 500 }}>{order.requests?.item_name}</div>
+                    <div style={{ color: 'var(--ink-2)', fontSize: 12 }}>{order.requests?.from_country} → IND</div>
+                    <div className="mono" style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500 }}>₹{order.requests?.traveler_fee}</div>
+                    <div className="mono" style={{ fontSize: 11 }}>
+                      {order.requests?.deadline ? new Date(order.requests.deadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }).toUpperCase() : '—'}
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <Link href={`/order/${order.id}`} style={{
+                        fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.08em',
+                        color: STATUS_COLOR[order.status] || 'var(--ink-3)',
+                        textDecoration: 'none',
+                      }}>
+                        {STATUS_LABEL[order.status] || order.status.toUpperCase()}
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )
         ) : (
